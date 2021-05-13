@@ -16,9 +16,12 @@ import DeleteSourceMaps from '../scripts/DeleteSourceMaps';
 CheckNodeEnv('production');
 DeleteSourceMaps();
 
-const devtoolsConfig = process.env.DEBUG_PROD === 'true' ? {
-  devtool: 'source-map'
-} : {};
+const devtoolsConfig =
+  process.env.DEBUG_PROD === 'true'
+    ? {
+        devtool: 'source-map',
+      }
+    : {};
 
 export default merge(baseConfig, {
   ...devtoolsConfig,
@@ -27,16 +30,23 @@ export default merge(baseConfig, {
 
   target: 'electron-renderer',
 
-  entry: [
-    'core-js',
-    'regenerator-runtime/runtime',
-    path.join(__dirname, '../../src/index.tsx'),
-  ],
+  entry: {
+    renderer: [
+      'core-js',
+      'regenerator-runtime/runtime',
+      path.join(__dirname, '../../src/index.tsx'),
+    ],
+    home: [
+      'core-js',
+      'regenerator-runtime/runtime',
+      path.join(__dirname, '../../src/home.tsx'),
+    ],
+  },
 
   output: {
     path: path.join(__dirname, '../../src/dist'),
     publicPath: './dist/',
-    filename: 'renderer.prod.js',
+    filename: '[name].prod.js',
   },
 
   module: {
@@ -52,7 +62,7 @@ export default merge(baseConfig, {
             },
           },
           'css-loader',
-          'sass-loader'
+          'sass-loader',
         ],
       },
       // WOFF Font
@@ -125,13 +135,12 @@ export default merge(baseConfig, {
 
   optimization: {
     minimize: true,
-    minimizer:
-      [
-        new TerserPlugin({
-          parallel: true,
-        }),
-        new CssMinimizerPlugin(),
-      ],
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+      }),
+      new CssMinimizerPlugin(),
+    ],
   },
 
   plugins: [

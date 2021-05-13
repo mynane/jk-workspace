@@ -15,6 +15,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+import './main/JKEvent';
 
 export default class AppUpdater {
   constructor() {
@@ -71,9 +72,16 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
+    frame: false,
+    titleBarStyle: 'hidden',
     icon: getAssetPath('icon.png'),
     webPreferences: {
+      webviewTag: true,
+      webSecurity: false,
       nodeIntegration: true,
+      enableRemoteModule: true,
+      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, './common/preload.js'),
     },
   });
 
