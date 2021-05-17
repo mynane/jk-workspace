@@ -5,15 +5,17 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable class-methods-use-this */
 import { makeAutoObservable } from 'mobx';
-import { remote } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import routes from '../config/router.config';
-
-const home = remote.app.getPath('home');
+import { readJsonSync } from 'fs-extra';
+const Constants = remote.require('./utils/Constants').default;
+const { Init } = remote.require('./common/electron');
 
 export interface IMenu {
+  appId: string;
   name: string;
+  latest: string;
   path: string;
   component?: string;
   icon: string;
@@ -22,7 +24,9 @@ export interface IMenu {
 }
 
 export const homeMenu = {
+  appId: 'mynane/home',
   name: '首页',
+  latest: 'v1.0.0',
   path: path.join(__dirname, 'home.html'),
   icon: 'icon-home',
   keepalive: true,
@@ -35,41 +39,58 @@ export class MenuStore {
 
   constructor() {
     makeAutoObservable(this);
+    this.interval();
+  }
+
+  /**
+   * interval
+   */
+  public interval() {
     this.getExtensions();
+    ipcRenderer.on('module-update', (_event, data) => {
+      this.getExtensions(data);
+    });
   }
 
   /**
    * getExtensions
    */
-  public getExtensions() {
+  public getExtensions(_modules?: any[]) {
     const menus: IMenu[] = [];
-    const extensionPath: string = path.join(home, '.jkworkspace/extensions');
-    const extensions = fs.readdirSync(
-      path.join(home, '.jkworkspace/extensions')
-    );
+    const modules = _modules ?? Init.loadLocalConfig();
 
-    for (const extension of extensions) {
-      const stat = fs.statSync(path.join(extensionPath, extension));
-      if (stat.isDirectory()) {
-        try {
-          const package = fs.readFileSync(
-            path.join(extensionPath, extension, 'package.json')
+    for (const module of modules) {
+      try {
+        const modulePath = path.join(
+          Constants.EXTENSIONS,
+          module.appId,
+          module.latest,
+          'build'
+        );
+        const stat = fs.statSync(modulePath);
+
+        if (stat.isDirectory()) {
+          const packageJSON = readJsonSync(
+            path.join(modulePath, 'package.json')
           );
-          const packageJSON = JSON.parse(package.toString());
-
-          menus.push({
-            name: packageJSON.name,
-            path: path.join(extensionPath, extension, 'index.html'),
-            icon: packageJSON.icon,
-            origin: packageJSON,
-          });
-        } catch (error) {
-          console.log(error);
+          const temp = {
+            appId: module.appId,
+            name: packageJSON.jkc?.name ?? 'unknown',
+            latest: module.latest,
+            path: path.join(modulePath, 'index.html'),
+            icon: packageJSON.jkc?.icon ?? 'icon-help',
+          };
+          if (this.active?.appId === module?.appId) {
+            this.active = temp;
+          }
+          menus.push(temp);
         }
+      } catch (error) {
+        console.log(error);
       }
     }
 
-    this.menus = [...this.menus, ...menus];
+    this.menus = [homeMenu, ...menus];
   }
 
   /**

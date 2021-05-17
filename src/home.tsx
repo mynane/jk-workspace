@@ -1,5 +1,9 @@
 import React from 'react';
 import { render } from 'react-dom';
 import Home from './home/index';
+import './renderer/common/common.less';
 
-render(<div><Home /><Home /><Home /><Home /><Home /><Home /><Home /><Home /></div>, document.getElementById('root'));
+render(
+  <Home />,
+  document.getElementById('root')
+);

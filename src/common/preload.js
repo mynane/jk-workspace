@@ -16,7 +16,7 @@ const { v4: uuidv4 } = require('uuid');
   JKTool.prototype = {
     constructor: JKTool,
     init() {
-      ipcRenderer.on(`home`, (event, { uuid, data }) => {
+      ipcRenderer.on(`reply`, (event, { uuid, data }) => {
         if (this.callBack[uuid]) {
           this.callBack[uuid](data);
         }
@@ -29,6 +29,15 @@ const { v4: uuidv4 } = require('uuid');
         patchUrl,
         uuid,
         moduleID: 'home',
+      });
+    },
+    checkRepo(user, repo, callback) {
+      const uuid = uuidv4();
+      this.callBack[uuid] = callback;
+      ipcRenderer.send('checkRepo', {
+        user,
+        repo,
+        uuid,
       });
     },
   };

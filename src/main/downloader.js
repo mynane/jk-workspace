@@ -15,6 +15,7 @@ const {
 } = require('worker_threads');
 
 function workerThread() {
+  console.log(2);
   const { patchUrl, baseDir, downloadFile } = workerData;
   let receivedBytes = 0;
   let totalBytes = 0;

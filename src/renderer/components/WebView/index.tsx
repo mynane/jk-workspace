@@ -32,12 +32,13 @@ const WebView: React.FC<IWebViewProps> = (props) => {
       maskRef.current.style.display = 'none';
     };
 
-    // const failload = () => {
-    //   maskRef.current.style.display = 'flex';
-    // };
+    const domready = () => {
+      ref?.current?.openDevTools();
+    };
 
     ref?.current?.addEventListener('did-start-loading', loadstart);
     ref?.current?.addEventListener('did-stop-loading', loadstop);
+    ref?.current?.addEventListener('dom-ready', domready);
     // ref?.current?.addEventListener('did-fail-load', failload);
 
 
@@ -46,6 +47,7 @@ const WebView: React.FC<IWebViewProps> = (props) => {
       // Prints "pong"
       // ref?.current?.send('ping');
     });
+
     // ref?.current?.send('ping');
   }, []);
 

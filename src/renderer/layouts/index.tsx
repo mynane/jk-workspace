@@ -1,3 +1,4 @@
+/* eslint-disable react/no-danger */
 /* eslint-disable no-script-url */
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -13,17 +14,18 @@ import WebView from '../components/WebView';
 
 
 export interface IMenu {
+  current: any;
   menuStroe: MenuStore;
   [key: string]: any;
 }
 
 export const Menu: React.FC<IMenu> = (props) => {
-  const { menuStroe } = props;
+  const { menuStroe, current } = props;
   const { menus = [], active } = menuStroe;
   return (
     <div className="left">
       {menus.map((r: any) => {
-        const avtive = active?.path === r.path
+        const avtive = active?.appId === r.appId
         return (
           <div key={r.path} className={`menu ${avtive ? 'active' : ''}`}>
             <Tooltip placement="right" mouseEnterDelay={0.5} title={r.name}>
@@ -33,7 +35,7 @@ export const Menu: React.FC<IMenu> = (props) => {
                   menuStroe?.setActive(r);
                 }}
               >
-                <IconFont type={avtive ? `${r.icon}-fill` : r.icon} />
+                <IconFont type={r.icon} />
               </a>
             </Tooltip>
           </div>
@@ -49,21 +51,21 @@ export interface ILayoutProps {
 }
 const Layout: React.FC<ILayoutProps> = observer(props => {
   const { active, menus } = menuStore;
-  const [ current, setCurrent ] = useState(active?.path);
+  const [ current, setCurrent ] = useState(active);
 
   const isHome = active?.path.includes(__dirname);
 
   useEffect(() => {
-    if (!active?.path.includes(__dirname)) {
-      setCurrent(active?.path);
+    if (active?.appId !== homeMenu?.appId) {
+      setCurrent(active);
     }
-  }, [active?.path]);
+  }, [active?.appId]);
 
   return (
     <div className="container">
-      <Menu menuStroe={menuStore} />
+      <Menu menuStroe={menuStore} current={current} />
       <WebView src={homeMenu?.path ?? ''} show={isHome} />
-      <WebView src={current ?? ''} show={!isHome} />
+      <WebView src={current?.path ?? ''} show={!isHome} />
     </div>
   );
 });

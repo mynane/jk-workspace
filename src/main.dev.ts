@@ -16,6 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import './main/JKEvent';
+import Electron from './common/electron';
 
 export default class AppUpdater {
   constructor() {
@@ -113,6 +114,8 @@ const createWindow = async () => {
     event.preventDefault();
     shell.openExternal(url);
   });
+
+  Electron.addMain(mainWindow);
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
