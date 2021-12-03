@@ -33,14 +33,14 @@ const WebView: React.FC<IWebViewProps> = (props) => {
     };
 
     const domready = () => {
-      ref?.current?.openDevTools();
+      // ref?.current?.openDevTools();
     };
 
     ref?.current?.addEventListener('did-start-loading', loadstart);
     ref?.current?.addEventListener('did-stop-loading', loadstop);
     ref?.current?.addEventListener('dom-ready', domready);
     // ref?.current?.addEventListener('did-fail-load', failload);
-
+    console.log(123123)
 
     ref?.current?.addEventListener('ipc-message', (event) => {
       console.log(event.channel);

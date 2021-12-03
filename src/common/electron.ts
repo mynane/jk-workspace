@@ -14,6 +14,7 @@ import { JKEvent } from '../main/JKEvent';
 import { getRemoteConfig } from '../services';
 import Constants from '../utils/Constants';
 import GitHub from './GitHub';
+import { queue } from '../utils';
 const extract = require('extract-zip');
 
 let mainWindow: {
@@ -32,9 +33,8 @@ export class Init {
    * interval
    */
   public interval() {
-    // this.checkConfig();
+    this.checkConfig();
     setInterval(() => {
-      console.log('start checkConfig');
       this.checkConfig();
     }, Constants.DELAY);
   }
@@ -54,7 +54,6 @@ export class Init {
     if (!this.isupdating) {
       this.isupdating = true;
       const localConfig = await Init.loadLocalConfig();
-
       this.updatorModules(localConfig);
     }
   }
@@ -90,11 +89,10 @@ export class Init {
                     ),
                   }
                 );
-
+                Init.setLocalConfig(local.appId, { latest: latest.tag_name });
                 resolve({ ...local, latest: latest.tag_name });
               } catch (error) {
                 reject(error);
-                // console.log(error);
               }
             }
           }
@@ -108,22 +106,19 @@ export class Init {
   /**
    * updatorModules
    */
-  public async updatorModules(locals: any[]) {
+  public updatorModules(locals: any[]) {
     const promiseAll = [];
-    for (let i = 0; i < locals.length; i++) {
-      const local = locals[i];
+    for (const local of locals) {
       promiseAll.push(this.load(local));
     }
-    try {
-      const nlocals = await Promise.all(promiseAll);
-      console.log('nlocals: ', nlocals);
-      fs.writeFileSync(Constants.CONFIG, JSON.stringify(nlocals));
-      mainWindow?.webContents.send('module-update', nlocals);
-      this.isupdating = false;
-    } catch (error) {
-      console.log('error: ', error);
-      this.isupdating = false;
-    }
+    queue(promiseAll)
+      .then((nlocals) => {
+        mainWindow?.webContents.send('module-update', nlocals);
+        this.isupdating = false;
+      })
+      .catch((err) => {
+        this.isupdating = false;
+      });
   }
 
   /**
@@ -136,6 +131,20 @@ export class Init {
     } catch (error) {
       return [];
     }
+  }
+
+  static async setLocalConfig(appId: string, config: any) {
+    const oConfig = await Init.loadLocalConfig();
+
+    for (let i = 0; i < oConfig.length; i++) {
+      const c = oConfig[i];
+      if (c.appId === appId) {
+        oConfig[i] = { ...c, ...config };
+        break;
+      }
+    }
+
+    fs.writeFileSync(Constants.CONFIG, JSON.stringify(oConfig));
   }
 
   /**
